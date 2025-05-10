@@ -26,7 +26,8 @@ ENV GITHUB_PERSONAL_ACCESS_TOKEN=changeme
 # Executa o servidor no modo stdio (entrada padrão)
 SHELL ["/bin/sh", "-c"]
 
-CMD /bin/sh -c 'echo "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"get_me\",\"params\":{}}\" | ./github-mcp-server stdio'
+CMD /bin/sh -c 'echo "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"get_me\",\"params\":{}}" | ./github-mcp-server stdio'
+
 
 
 
