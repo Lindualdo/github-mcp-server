@@ -24,5 +24,8 @@ RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib
 ENV GITHUB_PERSONAL_ACCESS_TOKEN=changeme
 
 # Executa o servidor no modo stdio (entrada padrão)
-CMD /bin/sh -c 'echo "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"get_me\",\"params\":{}}" | ./github-mcp-server stdio'
+SHELL ["/bin/sh", "-c"]
+
+CMD echo '{"jsonrpc":"2.0","id":1,"method":"get_me","params":{}}' \| ./github-mcp-server stdio
+
 
