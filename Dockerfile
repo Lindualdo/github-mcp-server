@@ -1,26 +1,27 @@
-FROM golang:1.24.2-alpine AS build
-ARG VERSION="dev"
+# Etapa 1: Compila o binário a partir do código original
+FROM golang:1.24-bullseye AS builder
 
-# Set the working directory
-WORKDIR /build
+WORKDIR /app
+COPY . .
 
-# Install git
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk add git
+RUN apt-get update && \
+    apt-get install -y git && \
+    go mod tidy && \
+    go build -o github-mcp-server ./cmd/github-mcp-server
 
-# Build the server
-# go build automatically download required module dependencies to /go/pkg/mod
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=bind,target=. \
-    CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=$(git rev-parse HEAD) -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    -o /bin/github-mcp-server cmd/github-mcp-server/main.go
+# Etapa 2: Executa o binário com variável de ambiente
+FROM debian:bullseye-slim
 
-# Make a stage to run the app
-FROM gcr.io/distroless/base-debian12
-# Set the working directory
-WORKDIR /server
-# Copy the binary from the build stage
-COPY --from=build /bin/github-mcp-server .
-# Command to run the server
+WORKDIR /app
+
+# Copia o binário compilado
+COPY --from=builder /app/github-mcp-server ./github-mcp-server
+
+# Adiciona shell para testes básicos
+RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
+
+# Define variável de ambiente esperada pelo binário
+ENV GITHUB_PERSONAL_ACCESS_TOKEN=changeme
+
+# Executa o servidor no modo stdio (entrada padrão)
 CMD ["./github-mcp-server", "stdio"]
